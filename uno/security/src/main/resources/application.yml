@@ -1,0 +1,22 @@
+server:
+  port: 8095 # Le port de ton module Security
+
+app:
+  portail:
+    base-url: localhost:8080 # L'adresse et le port où tourne ton IDP (daef-portal-idp)
+
+# Si tu as besoin de Redis pour le cache des sessions/tokens
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  datasource:
+    url: jdbc:postgresql://localhost:5432/taxawuu
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

@@ -1,0 +1,89 @@
+@startuml C4_Code_WorkflowModule
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Code.puml
+
+title Code Diagram — workflow-module · StateMachine & entités clés
+
+class DossierStateMachineConfig {
+    + configure(StateMachineStateConfigurer)
+    + configure(StateMachineTransitionConfigurer)
+    -- États : DEPOSE, REDIGE, SOUMIS_CTS
+    -- VISITE_TERRAIN, VALIDE, TRANSMIS_IMF
+    -- FINANCE, REMBOURSE, REFUSE
+    -- Guards : isComplete(), hasPVPrefet()
+    -- Actions : notifyEvaluateur(), logTransition()
+}
+
+class WorkflowService {
+    - stateMachineFactory
+    - auditLogRepository
+    - eventPublisher
+    + soumettreAuCTS(dossierId, userId)
+    + validerParEvaluateur(dossierId, avis)
+    + validerParCoordinateur(dossierId, avis)
+    + validerFinale(dossierId, userId)
+    + refuser(dossierId, motif)
+    + enregistrerPVPrefet(dossierId, pv)
+    + planifierVisiteTerrain(dossierId, date)
+}
+
+class EtapeWorkflow {
+    + id : UUID
+    + dossierId : UUID
+    + statut : StatutDossier (enum)
+    + acteurId : UUID
+    + roleActeur : String
+    + commentaire : String
+    + dateAction : LocalDateTime
+    + version : Long @Version
+}
+
+class PVCommission {
+    + id : UUID
+    + dossierId : UUID
+    + prefetId : UUID
+    + region : String
+    + dateCommission : LocalDate
+    + avisRegional : AvisType
+    + scoreViabilite : Integer
+    + observations : String
+    + contenuPV : String
+    + dateSignature : LocalDateTime
+}
+
+class GrillePreSelection {
+    + id : UUID
+    + dossierId : UUID
+    + evaluateurId : UUID
+    + criteres : List<CritereScore>
+    + scoreTotal : Integer
+    + recommandation : String
+    + dateEvaluation : LocalDateTime
+}
+
+class AuditLog {
+    + id : UUID  
+    + dossierId : UUID
+    + acteurId : UUID
+    + ancienStatut : StatutDossier
+    + nouveauStatut : StatutDossier
+    + timestamp : LocalDateTime
+    + ipAddress : String
+    -- INSERT ONLY · jamais UPDATE ni DELETE
+}
+
+class DossierValideEvent {
+    + dossierId : UUID
+    + montantAccorde : BigDecimal
+    + produitFinancier : ProduitType
+    + imfCible : UUID
+    + timestamp : LocalDateTime
+}
+
+WorkflowService --> DossierStateMachineConfig : utilise
+WorkflowService --> EtapeWorkflow : persiste
+WorkflowService --> AuditLog : INSERT ONLY
+WorkflowService --> PVCommission : lit / valide
+WorkflowService --> GrillePreSelection : lit score
+WorkflowService ..> DossierValideEvent : publie @EventPublisher
+
+@enduml

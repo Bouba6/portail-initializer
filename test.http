@@ -1,0 +1,38 @@
+
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+    "email": "admin4@daef.sn",
+    "password": "Admin@DAEF2025"
+}
+
+
+######
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+    "nomComplet": "DAEF Admin",
+    "email": "admin4@daef.sn",
+    "password": "Admin@DAEF2025",
+    "telephone": "0000000000",
+    "appCode": "TAXAWU",
+    "role": "ADMIN"
+}
+
+
+#######
+GET http://localhost:8095/api/test/admin-only
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI5OTZlZTE3ZS1mOTI5LTQwMWItYWE2MS1mNmQ1ZDQ0OTA1MDAiLCJlbWFpbCI6ImFkbWluNEBkYWVmLnNuIiwibm9tQ29tcGxldCI6IkRBRUYgQWRtaW4iLCJyb2xlcyI6WyJBRE1JTiJdLCJpYXQiOjE3ODAzMzMwMzgsImV4cCI6MTc4MDQxOTQzOH0.dCozga0eUZOUNW_sMAZvbu4IbrFqv-uKGJ5_W2ZPguOwBfX5x_SGa1eMnUZx3O_iph3NkmKbRE6Zh5g6EH4ZuA
+
+##########
+
+GET http://localhost:8080/api/auth/validate
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI5OTZlZTE3ZS1mOTI5LTQwMWItYWE2MS1mNmQ1ZDQ0OTA1MDAiLCJlbWFpbCI6ImFkbWluNEBkYWVmLnNuIiwibm9tQ29tcGxldCI6IkRBRUYgQWRtaW4iLCJyb2xlcyI6WyJBRE1JTiJdLCJpYXQiOjE3ODAzMzMwMzgsImV4cCI6MTc4MDQxOTQzOH0.dCozga0eUZOUNW_sMAZvbu4IbrFqv-uKGJ5_W2ZPguOwBfX5x_SGa1eMnUZx3O_iph3NkmKbRE6Zh5g6EH4ZuA
+
+
+##########
+
+GET http://localhost:8095/api/test/me
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI5OTZlZTE3ZS1mOTI5LTQwMWItYWE2MS1mNmQ1ZDQ0OTA1MDAiLCJlbWFpbCI6ImFkbWluNEBkYWVmLnNuIiwibm9tQ29tcGxldCI6IkRBRUYgQWRtaW4iLCJyb2xlcyI6WyJBRE1JTiJdLCJpYXQiOjE3ODAzMzMwMzgsImV4cCI6MTc4MDQxOTQzOH0.dCozga0eUZOUNW_sMAZvbu4IbrFqv-uKGJ5_W2ZPguOwBfX5x_SGa1eMnUZx3O_iph3NkmKbRE6Zh5g6EH4ZuA

@@ -1,0 +1,41 @@
+@startuml C4_Context_DAEF
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title System Context — Écosystème DAEF
+
+Person(promotrice, "Promotrice / GIE", "Femme entrepreneure\nqui soumet un dossier de financement")
+Person(evaluateur, "Évaluateur FNCF", "Agent qui instruit\nles dossiers")
+Person(coordinateur, "Coordinateur", "Valide les dossiers\naprès évaluation")
+Person(validateur, "Validateur / Directrice", "Validation finale\navant CTS")
+Person(prefet, "Préfet", "Saisit les PV\nde commission locale")
+Person(admin_daef, "Admin DAEF", "Gère les utilisateurs,\nprogrammes et rapports")
+
+System(daef_portal, "DAEF Portal (IDP)", "Authentification centralisée\nSSO pour tout l'écosystème")
+System(taxawu, "Taxawu", "Gestion du FNCF\nDossiers, workflow CTS, revolving")
+System(suquali, "Suquali", "Gestion du FNEF\n(Fonds Entrepreneuriat Féminin)")
+
+System_Ext(imf, "IMF partenaires", "Institutions de Microfinance\nqui décaissent les fonds")
+System_Ext(sms_gateway, "Passerelle SMS", "Envoi notifications\nSMS aux promotrices")
+System_Ext(smtp, "Serveur Mail", "Alertes email\naux agents")
+
+Rel(promotrice, taxawu, "Dépose dossier,\nsuit avancement", "HTTPS")
+Rel(evaluateur, taxawu, "Instruit et évalue", "HTTPS")
+Rel(coordinateur, taxawu, "Valide étape 2", "HTTPS")
+Rel(validateur, taxawu, "Valide finale", "HTTPS")
+Rel(prefet, taxawu, "Saisit PV commission", "HTTPS")
+Rel(admin_daef, daef_portal, "Gère accès\net programmes", "HTTPS")
+Rel(admin_daef, taxawu, "Pilote et rapports", "HTTPS")
+
+Rel(promotrice, daef_portal, "Authentification", "HTTPS/OIDC")
+Rel(evaluateur, daef_portal, "Authentification", "HTTPS/OIDC")
+Rel(prefet, daef_portal, "Authentification", "HTTPS/OIDC")
+
+Rel(taxawu, imf, "Transmet dossiers\nvalidés", "API REST / SFTP")
+Rel(taxawu, sms_gateway, "Notifications\npromotrices", "HTTPS")
+Rel(taxawu, smtp, "Alertes agents", "SMTP")
+Rel(daef_portal, taxawu, "Valide tokens JWT", "HTTPS/Feign")
+Rel(daef_portal, suquali, "Valide tokens JWT", "HTTPS/Feign")
+
+@enduml

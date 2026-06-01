@@ -1,0 +1,51 @@
+@startuml C4_Component_Taxawu
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Component Diagram — taxawu-service (modules internes)
+
+Container_Ext(idp, "daef-portal-idp", "IDP central · Port 8080")
+Container_Ext(redis, "Redis Taxawu", "Cache · Locks")
+Container_Ext(db, "PostgreSQL Taxawu", "Base de données")
+Container_Ext(storage, "MinIO", "Fichiers / PJ")
+Container_Ext(sms, "SMS Gateway", "Notifications")
+
+Container_Boundary(taxawu, "taxawu-service") {
+
+    Component(security, "security-adapter", "Spring Security\nOpenFeign Client", "Intercepte chaque requête\nValide JWT auprès IDP\nInjecte UserContext")
+
+    Component(dossier, "dossier-module", "Spring MVC\nSpring Data JPA", "Dépôt dossier (individuel/GIE)\nCritères éligibilité\nGestion documents CNI/RCCM\nAnti double-financement check")
+
+    Component(workflow, "workflow-module", "Spring StateMachine\nSpring Events", "FSM statuts dossier\nCTS convocations et PV\nVisite terrain\nGrille pré-sélection\nPV préfets\nMotifsRefus\nAudit log immuable")
+
+    Component(financement, "financement-module", "Spring Data JPA\nOptimistic Locking", "Transmission IMF\nEchéancier remboursement\nLogique revolving\nFile attente (Redis-backed)\nRefinancement\nMontée de catégorie")
+
+    Component(notification, "notification-module", "@TransactionalEventListener\nScheduler", "SMS/Email post-commit\nAlertes changements statut\nChatbot orientation\nNuméro vert log")
+
+    Component(referentiel, "referentiel-module", "Spring Data JPA\nCache @Cacheable", "Régions / Départements\nSecteurs d'activité (halal)\nParamètres système (taux 5%)\nTypes groupements\nPartenaires IMF")
+
+    Component(reporting, "reporting-module", "JasperReports\nScheduler", "Carte d'action 3-5 ans\nTableaux de bord DAEF\nExport PDF/Excel\nStatistiques régionales")
+}
+
+Rel(security, idp, "Valide token", "OpenFeign HTTP")
+Rel(security, dossier, "Injecte UserContext")
+Rel(security, workflow, "Injecte UserContext")
+Rel(security, financement, "Injecte UserContext")
+
+Rel(dossier, workflow, "DossierSoumisEvent\n@TransactionalEventListener")
+Rel(workflow, financement, "DossierValideEvent\n@TransactionalEventListener")
+Rel(workflow, notification, "StatutChangéEvent")
+Rel(financement, notification, "RemboursementRecuEvent\nFinancementTransmisEvent")
+Rel(financement, workflow, "Met à jour file\nattente revolving")
+
+Rel(dossier, db, "CRUD dossiers", "JDBC/JPA")
+Rel(workflow, db, "CRUD workflow\naudit_log", "JDBC/JPA")
+Rel(financement, db, "CRUD financement", "JDBC/JPA")
+Rel(financement, redis, "Lock revolving\nFile attente", "Redis")
+Rel(referentiel, redis, "@Cacheable", "Redis")
+Rel(notification, sms, "Envoi SMS", "HTTPS")
+Rel(dossier, storage, "Upload PJ", "S3 API")
+Rel(reporting, db, "Requêtes analytiques", "JDBC")
+
+@enduml

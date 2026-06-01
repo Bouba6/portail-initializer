@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+
+  # ── Databases ──────────────────────────────────────────────────────
+  portail-db:
+    image: postgres:15-alpine
+    container_name: daef-portail-db
+    environment:
+      POSTGRES_DB: portail_db
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - portail_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SPRING_DATASOURCE_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  taxawu-db:
+    image: postgres:15-alpine
+    container_name: daef-taxawu-db
+    environment:
+      POSTGRES_DB: taxawu_db
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - taxawu_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SPRING_DATASOURCE_USERNAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis (blacklist tokens + cache) ──────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: daef-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Services ───────────────────────────────────────────────────────
+  portail-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: daef-portail-service
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://portail-db:5432/portail_db
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    depends_on:
+      portail-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Taxawu (référencé ici pour montrer la dépendance au portail)
+  # taxawu-service:
+  #   build:
+  #     context: ../taxawu-service
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     PORTAIL_BASE_URL: http://portail-service:8080
+  #     SPRING_DATASOURCE_URL: jdbc:postgresql://taxawu-db:5433/taxawu_db
+  #   depends_on:
+  #     taxawu-db:
+  #       condition: service_healthy
+  #     portail-service:
+  #       condition: service_started
+
+volumes:
+  portail_db_data:
+  taxawu_db_data:
+  redis_data:

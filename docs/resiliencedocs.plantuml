@@ -1,0 +1,29 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor "Utilisatrice" as User
+participant "Taxawu Backend" as Taxawu
+participant "Circuit Breaker\n(Resilience4j)" as CB
+participant "Portail IDP" as IDP
+
+User -> Taxawu : GET /api/dossiers
+Taxawu -> CB : validateToken(jwt)
+
+alt Circuit FERMÉ (Normal)
+    CB -> IDP : GET /api/auth/validate
+    alt Succès IDP
+        IDP -> CB : 200 OK (Roles)
+        CB -> Taxawu : Token Valide
+        Taxawu -> User : Liste dossiers
+    else Échec IDP (Timeout/500)
+        IDP -> CB : Erreur réseau
+        CB -> Taxawu : executeFallback()
+        Taxawu -> User : Mode dégradé (Cache)
+    end
+else Circuit OUVERT (IDP KO)
+    CB -> Taxawu : Fast Fail (CallNotPermitted)
+    Taxawu -> User : Message maintenance
+end
+
+@enduml

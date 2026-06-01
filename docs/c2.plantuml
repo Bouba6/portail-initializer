@@ -1,0 +1,55 @@
+@startuml C4_Container_DAEF
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Container Diagram — Écosystème DAEF complet
+
+Person(user, "Utilisateurs\n(Promotrice, Agent, Préfet, Admin)")
+
+System_Boundary(idp_sys, "daef-portal-idp · Port 8080") {
+    Container(idp_api, "IDP Spring Boot", "Spring Authorization Server\nArchitecture Hexagonale", "Authentification OAuth2/OIDC\nGestion accès multi-apps")
+    ContainerDb(idp_db, "PostgreSQL IDP", "PostgreSQL 15", "accounts, apps_registry\nuser_permissions")
+    Container(idp_cache, "Redis IDP", "Redis 7", "Sessions actives\nTokens révoqués (blacklist)\nRate limiting login")
+}
+
+System_Boundary(taxawu_sys, "taxawu-service · Port 8081") {
+    Container(taxawu_api, "Taxawu Spring Boot", "Spring Boot 3 · Java 21\nArchitecture Modulaire", "Workflow FNCF, dossiers\nCTS, revolving, PV préfets")
+    ContainerDb(taxawu_db, "PostgreSQL Taxawu", "PostgreSQL 15", "dossiers, workflow\nfinancement, audit_log")
+    Container(taxawu_cache, "Redis Taxawu", "Redis 7", "Cache sessions user\nStatuts dossiers chauds\nFile attente revolving\nLimite double financement")
+    Container(taxawu_storage, "Stockage fichiers", "MinIO / S3-compatible", "Pièces jointes dossiers\nPV scannés, documents CNI")
+}
+
+System_Boundary(suquali_sys, "suquali-service · Port 8082") {
+    Container(suquali_api, "Suquali Spring Boot", "Spring Boot 3 · Java 21\nArchitecture Modulaire", "Gestion FNEF")
+    ContainerDb(suquali_db, "PostgreSQL Suquali", "PostgreSQL 15", "Données métier FNEF")
+    Container(suquali_cache, "Redis Suquali", "Redis 7", "Cache métier FNEF")
+}
+
+Container(frontend_portal, "Frontend Launchpad", "React / Next.js", "Portail SSO · Affiche\nles apps autorisées par user")
+Container(frontend_taxawu, "Frontend Taxawu", "React / Next.js", "Interface dossiers\nchatbot, suivi, PV préfets")
+
+System_Ext(imf, "IMF partenaires", "API externe")
+System_Ext(sms_gw, "Passerelle SMS", "Ex: Orange API")
+
+Rel(user, frontend_portal, "Login unique", "HTTPS")
+Rel(user, frontend_taxawu, "Gestion dossiers", "HTTPS")
+Rel(frontend_portal, idp_api, "OAuth2 Authorization Code", "HTTPS")
+Rel(frontend_taxawu, taxawu_api, "REST + JWT", "HTTPS")
+
+Rel(taxawu_api, idp_api, "Valide JWT\n(OpenFeign)", "HTTP interne")
+Rel(suquali_api, idp_api, "Valide JWT\n(OpenFeign)", "HTTP interne")
+
+Rel(idp_api, idp_db, "Lecture/écriture", "JDBC")
+Rel(idp_api, idp_cache, "Sessions, blacklist", "Redis Protocol")
+
+Rel(taxawu_api, taxawu_db, "Lecture/écriture", "JDBC")
+Rel(taxawu_api, taxawu_cache, "Cache + locks", "Redis Protocol")
+Rel(taxawu_api, taxawu_storage, "Upload/download\npièces jointes", "S3 API")
+Rel(taxawu_api, sms_gw, "SMS notifications", "HTTPS")
+Rel(taxawu_api, imf, "Transmission dossiers", "REST/SFTP")
+
+Rel(suquali_api, suquali_db, "Lecture/écriture", "JDBC")
+Rel(suquali_api, suquali_cache, "Cache métier", "Redis Protocol")
+
+@enduml
