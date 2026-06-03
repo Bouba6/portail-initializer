@@ -17,9 +17,11 @@ pipeline {
             passwordVariable: 'DOCKER_PASS'
           )]) {
             sh """
-              docker build -t ${DOCKER_IMAGE}:${imageTag} ./daef-portal-idp
-              docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
-              docker push ${DOCKER_IMAGE}:${imageTag}
+              # Connexion à DockerHub
+              echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin
+              
+              # Build et Push multi-plateforme (Compatible OpenShift AMD64 et ton Mac ARM64)
+              docker buildx build --platform linux/amd64,linux/arm64 -t ${DOCKER_IMAGE}:${imageTag} --push ./daef-portal-idp
             """
           }
           env.IMAGE_TAG = imageTag
