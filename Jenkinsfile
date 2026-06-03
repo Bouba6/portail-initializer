@@ -28,25 +28,28 @@ pipeline {
     }
 
     stage('Update K8s Config Repo') {
-      steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'github-ssh', keyFileVariable: 'SSH_KEY')]) {
-          sh """
-            git clone ${GIT_CONFIG_REPO} k8s-config
-            cd k8s-config
-            
-            # Version compatible Mac & Linux
-            sed -i.bak 's|image: .*|image: boobabathily/daef-portal-idp:${IMAGE_TAG}|' deployment.yaml
-            rm -f deployment.yaml.bak
-            
-            git config user.name "Jenkins-CI"
-            git config user.email "jenkins@gogainde.com"
-            git add deployment.yaml
-            git commit -m "chore: update image tag to ${IMAGE_TAG} [skip ci]"
-            
-            # ... le reste de tes commandes pour push (ssh-agent ou clé) ...
-          """
+        steps {
+            withCredentials([sshUserPrivateKey(credentialsId: 'github-ssh-key', keyVariable: 'SSH_KEY')]) {
+            sh """
+                # Nettoyage préventif du dossier s'il existe déjà
+                rm -rf k8s-config
+
+                git clone ${GIT_CONFIG_REPO} k8s-config
+                cd k8s-config
+                
+                # Ta commande sed compatible Mac
+                sed -i.bak 's|image: .*|image: boobabathily/daef-portal-idp:${IMAGE_TAG}|' deployment.yaml
+                rm -f deployment.yaml.bak
+                
+                git config user.name "Jenkins-CI"
+                git config user.email "jenkins@gogainde.com"
+                git add deployment.yaml
+                git commit -m "chore: update image tag to ${IMAGE_TAG} [skip ci]"
+                
+                # Tes commandes de push SSH...
+            """
+            }
         }
-      }
-    }
+        }
   }
 }
