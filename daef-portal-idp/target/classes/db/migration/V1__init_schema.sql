@@ -4,7 +4,7 @@
 -- ══════════════════════════════════════════════════════════════════
 
 -- Extension UUID (PostgreSQL natif)
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ── Table : user_accounts ─────────────────────────────────────────
 CREATE TABLE user_accounts (
