@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    DOCKER_IMAGE = "Bouba6/daef-portal-idp"
+    DOCKER_IMAGE = "boobabathily/daef-portal-idp"
     GIT_CONFIG_REPO = "git@github.com:Bouba6/portail-k8s-config.git"
   }
 
