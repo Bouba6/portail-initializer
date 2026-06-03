@@ -33,12 +33,17 @@ pipeline {
           sh """
             git clone ${GIT_CONFIG_REPO} k8s-config
             cd k8s-config
-            sed -i 's|image: .*|image: ${DOCKER_IMAGE}:${env.IMAGE_TAG}|' deployment.yaml
-            git config user.email "jenkins@ci.local"
-            git config user.name "Jenkins"
+            
+            # Version compatible Mac & Linux
+            sed -i.bak 's|image: .*|image: boobabathily/daef-portal-idp:${IMAGE_TAG}|' deployment.yaml
+            rm -f deployment.yaml.bak
+            
+            git config user.name "Jenkins-CI"
+            git config user.email "jenkins@gogainde.com"
             git add deployment.yaml
-            git commit -m "ci: update image tag to ${env.IMAGE_TAG}"
-            GIT_SSH_COMMAND="ssh -i $SSH_KEY" git push origin main
+            git commit -m "chore: update image tag to ${IMAGE_TAG} [skip ci]"
+            
+            # ... le reste de tes commandes pour push (ssh-agent ou clé) ...
           """
         }
       }
