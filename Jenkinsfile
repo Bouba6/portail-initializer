@@ -58,5 +58,30 @@ pipeline {
         }
       }
     }
+
+    stage('Deploy to OpenShift') {
+      steps {
+        // Jenkins récupère ton token de l'Action 1 de manière sécurisée
+        withCredentials([string(credentialsId: 'openshift-token', variable: 'OCP_TOKEN')]) {
+          sh """
+            # 1. Connexion au cluster OpenShift de Heritage Africa
+            oc login --token=\${OCP_TOKEN} --server=https://api.origins.heritage.africa:6443 --insecure-skip-tls-verify
+            
+            # 2. Sélection de ton projet actif
+            oc project portail-mifass
+            
+            # 3. Entrée dans le dossier cloné
+            cd k8s-config
+            
+            # 4. Déploiement des configurations
+            oc apply -f deployment.yaml
+            oc apply -f service-route.yaml
+            
+            # 5. Suivi du démarrage en direct dans la console Jenkins
+            oc rollout status deployment/daef-portal-idp --timeout=2m
+          """
+        }
+      }
+    }
   }
 }
