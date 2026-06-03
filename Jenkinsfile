@@ -17,8 +17,8 @@ pipeline {
             passwordVariable: 'DOCKER_PASS'
           )]) {
             sh """
-              docker build -t ${DOCKER_IMAGE}:${imageTag} .
-              echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+              docker build -t ${DOCKER_IMAGE}:${imageTag} ./daef-portal-idp
+              echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
               docker push ${DOCKER_IMAGE}:${imageTag}
             """
           }
