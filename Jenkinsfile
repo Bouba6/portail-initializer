@@ -29,7 +29,7 @@ pipeline {
 
     stage('Update K8s Config Repo') {
         steps {
-            withCredentials([sshUserPrivateKey(credentialsId: 'github-ssh-key', keyVariable: 'SSH_KEY')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: 'github-ssh', keyVariable: 'SSH_KEY')]) {
             sh """
                 # Nettoyage préventif du dossier s'il existe déjà
                 rm -rf k8s-config
